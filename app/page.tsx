@@ -1,103 +1,288 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { useInView } from "framer-motion";
+import { useRef } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ArrowRight,
+  Book,
+  Code,
+  Languages,
+  Music,
+  Paintbrush,
+  Rocket,
+  Sparkles,
+  Users,
+} from "lucide-react";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const stagger = {
+  visible: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+function AnimatedSection({ children }: { children: React.ReactNode }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      variants={stagger}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const scrollToFeatures = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
+  };
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  return (
+    <div className="relative">
+      {/* Hero Section */}
+      <section className="relative min-h-[85vh] flex items-center justify-center py-20 px-4">
+        <AnimatedSection>
+          <div className="relative z-10 text-center space-y-8 max-w-5xl mx-auto">
+            <motion.div className="space-y-4" variants={fadeInUp}>
+              <Badge
+                variant="outline"
+                className="border-purple-500/20 bg-purple-500/10 text-purple-300 backdrop-blur-sm"
+              >
+                ✨ The Future of Skill Exchange
+              </Badge>
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Exchange Skills,
+                <br />
+                Grow Together
+              </h1>
+            </motion.div>
+            <motion.p
+              variants={fadeInUp}
+              className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto"
+            >
+              Connect with others to share your expertise and learn new skills
+              in return. Join our community of lifelong learners today.
+            </motion.p>
+            <motion.div
+              variants={fadeInUp}
+              className="flex flex-wrap items-center justify-center gap-4"
+            >
+              <Link href="/sign-up">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all duration-300"
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <a href="#features" onClick={scrollToFeatures}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                >
+                  Learn More
+                </Button>
+              </a>
+            </motion.div>
+            <motion.div
+              variants={fadeInUp}
+              className="pt-8 flex flex-wrap items-center justify-center gap-4 text-gray-400"
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center gap-2 bg-gray-800/50 px-4 py-2 rounded-full backdrop-blur-sm"
+              >
+                <Users className="h-5 w-5 text-purple-400" />
+                <span>1000+ Users</span>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center gap-2 bg-gray-800/50 px-4 py-2 rounded-full backdrop-blur-sm"
+              >
+                <Book className="h-5 w-5 text-blue-400" />
+                <span>500+ Skills</span>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center gap-2 bg-gray-800/50 px-4 py-2 rounded-full backdrop-blur-sm"
+              >
+                <Rocket className="h-5 w-5 text-pink-400" />
+                <span>24/7 Support</span>
+              </motion.div>
+            </motion.div>
+          </div>
+        </AnimatedSection>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="relative py-20 px-4">
+        <AnimatedSection>
+          <div className="relative z-10 container mx-auto">
+            <motion.div
+              variants={fadeInUp}
+              className="text-center space-y-4 mb-12"
+            >
+              <Badge
+                variant="outline"
+                className="border-blue-500/20 bg-blue-500/10 text-blue-300"
+              >
+                Features
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Why Choose Skill Swap?
+              </h2>
+            </motion.div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: Sparkles,
+                  title: "Skill Exchange",
+                  description:
+                    "Find people who want to learn what you know and learn from others in return.",
+                  gradient: "from-blue-500 to-purple-500",
+                },
+                {
+                  icon: Users,
+                  title: "Community",
+                  description:
+                    "Join a vibrant community of learners and teachers from all walks of life.",
+                  gradient: "from-purple-500 to-pink-500",
+                },
+                {
+                  icon: Book,
+                  title: "Flexible Learning",
+                  description:
+                    "Learn at your own pace, in your own way, with people who share your interests.",
+                  gradient: "from-pink-500 to-red-500",
+                },
+              ].map((feature, index) => (
+                <motion.div
+                  key={feature.title}
+                  variants={fadeInUp}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Card className="group bg-gray-800/50 border-gray-800 hover:border-gray-700 backdrop-blur-sm transition-all duration-300">
+                    <CardHeader>
+                      <motion.div
+                        initial={{ scale: 1 }}
+                        whileHover={{ scale: 1.1 }}
+                        className={`w-12 h-12 rounded-lg bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4`}
+                      >
+                        <feature.icon className="w-6 h-6 text-white" />
+                      </motion.div>
+                      <CardTitle className="text-gray-100">
+                        {feature.title}
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">
+                        {feature.description}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </AnimatedSection>
+      </section>
+
+      {/* Popular Skills Section */}
+      <section className="relative py-20 px-4">
+        <AnimatedSection>
+          <div className="relative z-10 container mx-auto">
+            <motion.div
+              variants={fadeInUp}
+              className="text-center space-y-4 mb-12"
+            >
+              <Badge
+                variant="outline"
+                className="border-pink-500/20 bg-pink-500/10 text-pink-300"
+              >
+                Popular Categories
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Explore Skills
+              </h2>
+            </motion.div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                {
+                  icon: Code,
+                  title: "Programming",
+                  description: "Web development, Python, JavaScript",
+                  gradient: "from-blue-500 to-cyan-500",
+                },
+                {
+                  icon: Languages,
+                  title: "Languages",
+                  description: "Spanish, French, Mandarin",
+                  gradient: "from-purple-500 to-pink-500",
+                },
+                {
+                  icon: Music,
+                  title: "Music",
+                  description: "Guitar, Piano, Singing",
+                  gradient: "from-orange-500 to-red-500",
+                },
+                {
+                  icon: Paintbrush,
+                  title: "Design",
+                  description: "UI/UX, Graphic Design, Photography",
+                  gradient: "from-green-500 to-emerald-500",
+                },
+              ].map((skill) => (
+                <motion.div
+                  key={skill.title}
+                  variants={fadeInUp}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Card className="group bg-gray-800/50 border-gray-800 hover:border-gray-700 backdrop-blur-sm transition-all duration-300">
+                    <CardHeader>
+                      <motion.div
+                        initial={{ scale: 1 }}
+                        whileHover={{ scale: 1.1 }}
+                        className={`w-12 h-12 rounded-lg bg-gradient-to-br ${skill.gradient} flex items-center justify-center mb-4`}
+                      >
+                        <skill.icon className="w-6 h-6 text-white" />
+                      </motion.div>
+                      <CardTitle className="text-gray-100">
+                        {skill.title}
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">
+                        {skill.description}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </AnimatedSection>
+      </section>
     </div>
   );
 }
