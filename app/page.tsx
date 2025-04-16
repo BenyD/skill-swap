@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -90,12 +89,12 @@ export default function Home() {
               variants={fadeInUp}
               className="flex flex-wrap items-center justify-center gap-4"
             >
-              <Link href="/sign-up">
+              <Link href="/dashboard">
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all duration-300"
                 >
-                  Get Started
+                  Explore Dashboard
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -180,7 +179,7 @@ export default function Home() {
                     "Learn at your own pace, in your own way, with people who share your interests.",
                   gradient: "from-pink-500 to-red-500",
                 },
-              ].map((feature, index) => (
+              ].map((feature) => (
                 <motion.div
                   key={feature.title}
                   variants={fadeInUp}
@@ -252,7 +251,7 @@ export default function Home() {
                   icon: Paintbrush,
                   title: "Design",
                   description: "UI/UX, Graphic Design, Photography",
-                  gradient: "from-green-500 to-emerald-500",
+                  gradient: "from-pink-500 to-purple-500",
                 },
               ].map((skill) => (
                 <motion.div

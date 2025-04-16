@@ -2,78 +2,44 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Sparkles, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const supabase = createClientComponentClient();
-  const router = useRouter();
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-    };
-
-    checkSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.refresh();
-  };
-
   const NavItems = () => (
     <>
-      {isLoggedIn ? (
-        <>
-          <Link href="/dashboard">
-            <Button
-              variant="ghost"
-              className="text-gray-300 hover:text-white hover:bg-gray-800"
-            >
-              Dashboard
-            </Button>
-          </Link>
-          <Button
-            variant="ghost"
-            onClick={handleSignOut}
-            className="text-gray-300 hover:text-white hover:bg-gray-800"
-          >
-            Sign Out
-          </Button>
-        </>
-      ) : (
-        <>
-          <Link href="/sign-in">
-            <Button
-              variant="ghost"
-              className="text-gray-300 hover:text-white hover:bg-gray-800"
-            >
-              Sign In
-            </Button>
-          </Link>
-          <Link href="/sign-up">
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600">
-              Sign Up
-            </Button>
-          </Link>
-        </>
-      )}
+      <Link href="/dashboard">
+        <Button
+          variant="ghost"
+          className="text-gray-300 hover:text-white hover:bg-gray-800"
+        >
+          Dashboard
+        </Button>
+      </Link>
+      <Link href="/profile-setup">
+        <Button
+          variant="ghost"
+          className="text-gray-300 hover:text-white hover:bg-gray-800"
+        >
+          Profile
+        </Button>
+      </Link>
+      <Link href="/create-post">
+        <Button
+          variant="ghost"
+          className="text-gray-300 hover:text-white hover:bg-gray-800"
+        >
+          Create Post
+        </Button>
+      </Link>
+      <Link href="/messages">
+        <Button
+          variant="ghost"
+          className="text-gray-300 hover:text-white hover:bg-gray-800"
+        >
+          Messages
+        </Button>
+      </Link>
     </>
   );
 

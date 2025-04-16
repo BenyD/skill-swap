@@ -1,206 +1,157 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type Profile = {
-  id: string;
-  email: string;
-  bio: string;
-  skills: string[];
-  skills_to_learn: string[];
+type Skill = {
+  name: string;
 };
 
-type SkillSwapPost = {
-  id: string;
-  title: string;
-  description: string;
-  skills_offered: string[];
-  skills_wanted: string[];
-  status: string;
-  created_at: string;
-};
+// Mock data for prototype
+const mockUserSkills = ["JavaScript", "React", "TypeScript", "UI Design"];
+const mockLearningSkills = ["Python", "Machine Learning", "Guitar"];
+const mockPosts = [
+  {
+    id: "1",
+    title: "Looking to exchange React skills for Python",
+    description:
+      "I'm an experienced React developer looking to learn Python. I can help you with React, TypeScript, and modern web development practices.",
+    offering: ["React", "TypeScript", "Web Development"],
+    wanting: ["Python", "Data Science"],
+  },
+  {
+    id: "2",
+    title: "Guitar lessons for Spanish practice",
+    description:
+      "I'm a professional guitarist looking to improve my Spanish. I can teach you guitar techniques and music theory in exchange for Spanish conversation practice.",
+    offering: ["Guitar", "Music Theory"],
+    wanting: ["Spanish", "Language Exchange"],
+  },
+];
 
-export default function Dashboard() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [posts, setPosts] = useState<SkillSwapPost[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function DashboardPage() {
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const {
-          data: { user },
-          error: authError,
-        } = await supabase.auth.getUser();
-
-        if (authError || !user) {
-          router.push("/sign-in");
-          return;
-        }
-
-        const { data: profileData } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        if (!profileData) {
-          // If no profile exists, redirect to profile setup
-          router.push("/profile-setup");
-          return;
-        }
-
-        setProfile(profileData);
-
-        const { data: postsData } = await supabase
-          .from("exchange_requests")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        setPosts(postsData || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        router.push("/sign-in");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [router]);
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Link href="/create-post">
-          <Button>Create New Post</Button>
-        </Link>
+    <div className="container mx-auto py-8 space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-4xl font-bold">Dashboard</h1>
+        <Button onClick={() => router.push("/create-post")}>
+          Create New Post
+        </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Profile</CardTitle>
-            <CardDescription>
-              Manage your skills and preferences
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {profile ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold">Skills You Have</h3>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {profile.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="rounded-full bg-primary/10 px-3 py-1 text-sm"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Skills You Want to Learn</h3>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {profile.skills_to_learn.map((skill) => (
-                      <span
-                        key={skill}
-                        className="rounded-full bg-primary/10 px-3 py-1 text-sm"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <Link href="/profile">
-                  <Button variant="outline">Edit Profile</Button>
-                </Link>
-              </div>
-            ) : (
-              <p>No profile data available</p>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Profile Section */}
+        <div className="space-y-6">
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div className="p-6 space-y-4">
+              <h2 className="text-2xl font-semibold">Your Profile</h2>
+              <p className="text-sm text-muted-foreground">
+                Manage your skills and preferences
+              </p>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Posts</CardTitle>
-            <CardDescription>Manage your skill swap requests</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {posts.length > 0 ? (
               <div className="space-y-4">
-                {posts.map((post) => (
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Skills You Have</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {mockUserSkills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-sm font-medium text-primary"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium mb-2">
+                    Skills You Want to Learn
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {mockLearningSkills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="inline-flex items-center rounded-md bg-secondary/10 px-2 py-1 text-sm font-medium text-secondary-foreground"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full mt-4"
+                onClick={() => router.push("/profile-setup")}
+              >
+                Edit Profile
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Posts Section */}
+        <div className="space-y-6">
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div className="p-6 space-y-4">
+              <h2 className="text-2xl font-semibold">Your Posts</h2>
+              <p className="text-sm text-muted-foreground">
+                Manage your skill swap requests
+              </p>
+
+              <div className="space-y-4">
+                {mockPosts.map((post) => (
                   <div
                     key={post.id}
-                    className="rounded-lg border p-4 hover:bg-accent/50"
+                    className="rounded-lg border p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/posts/${post.id}`)}
                   >
-                    <h3 className="font-semibold">{post.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <h3 className="font-medium mb-2">{post.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
                       {post.description}
                     </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="space-y-2">
                       <div>
-                        <span className="text-sm font-medium">Offering:</span>
-                        {post.skills_offered.map((skill) => (
-                          <span
-                            key={skill}
-                            className="ml-2 rounded-full bg-primary/10 px-2 py-1 text-xs"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Offering:
+                        </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {post.offering.map((skill) => (
+                            <span
+                              key={skill}
+                              className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                       <div>
-                        <span className="text-sm font-medium">Wanting:</span>
-                        {post.skills_wanted.map((skill) => (
-                          <span
-                            key={skill}
-                            className="ml-2 rounded-full bg-primary/10 px-2 py-1 text-xs"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Wanting:
+                        </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {post.wanting.map((skill) => (
+                            <span
+                              key={skill}
+                              className="inline-flex items-center rounded-md bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary-foreground"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                    <div className="mt-4 flex justify-end">
-                      <Link href={`/posts/${post.id}`}>
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
-                      </Link>
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p>No posts yet</p>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

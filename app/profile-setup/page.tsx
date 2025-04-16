@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,88 +41,48 @@ const stagger = {
   },
 };
 
+// Mock data for prototype
+const mockCategories: SkillCategory[] = [
+  { id: "1", name: "Programming" },
+  { id: "2", name: "Languages" },
+  { id: "3", name: "Music" },
+  { id: "4", name: "Design" },
+];
+
+const mockSkills: Record<string, Skill[]> = {
+  "1": [
+    { id: "1", name: "JavaScript", category_id: "1" },
+    { id: "2", name: "Python", category_id: "1" },
+    { id: "3", name: "React", category_id: "1" },
+    { id: "4", name: "TypeScript", category_id: "1" },
+  ],
+  "2": [
+    { id: "5", name: "Spanish", category_id: "2" },
+    { id: "6", name: "French", category_id: "2" },
+    { id: "7", name: "Mandarin", category_id: "2" },
+  ],
+  "3": [
+    { id: "8", name: "Guitar", category_id: "3" },
+    { id: "9", name: "Piano", category_id: "3" },
+    { id: "10", name: "Singing", category_id: "3" },
+  ],
+  "4": [
+    { id: "11", name: "UI/UX", category_id: "4" },
+    { id: "12", name: "Graphic Design", category_id: "4" },
+    { id: "13", name: "Photography", category_id: "4" },
+  ],
+};
+
 export default function ProfileSetup() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [bio, setBio] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [categories, setCategories] = useState<SkillCategory[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [selectedSkillsOffered, setSelectedSkillsOffered] = useState<string[]>(
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedSkillsToLearn, setSelectedSkillsToLearn] = useState<string[]>(
     []
   );
-  const [selectedSkillsWanted, setSelectedSkillsWanted] = useState<string[]>(
-    []
-  );
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const { data, error } = await supabase
-        .from("skill_categories")
-        .select("*")
-        .order("name");
-
-      if (error) {
-        console.error("Error fetching categories:", error);
-        return;
-      }
-
-      setCategories(data || []);
-    };
-
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    const fetchSkills = async () => {
-      if (!selectedCategory) return;
-
-      const { data, error } = await supabase
-        .from("skills")
-        .select("*")
-        .eq("category_id", selectedCategory)
-        .order("name");
-
-      if (error) {
-        console.error("Error fetching skills:", error);
-        return;
-      }
-
-      setSkills(data || []);
-    };
-
-    fetchSkills();
-  }, [selectedCategory]);
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-
-      if (error || !user) {
-        router.push("/sign-in");
-        return;
-      }
-
-      // Check if user has already completed profile setup
-      const { data: profile } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", user.id)
-        .single();
-
-      if (profile) {
-        // If profile exists, redirect to dashboard
-        router.push("/dashboard");
-        return;
-      }
-    };
-
-    checkUser();
-  }, [router]);
 
   const handleNext = () => {
     if (step < 3) {
@@ -137,188 +96,169 @@ export default function ProfileSetup() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
 
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("Not authenticated");
-
-      // Create user profile
-      const { error: profileError } = await supabase.from("users").insert({
-        id: user.id,
-        email: user.email,
-        bio: bio,
-        skills_offered: selectedSkillsOffered,
-        skills_wanted: selectedSkillsWanted,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
-      if (profileError) throw profileError;
-
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       toast.success("Profile setup complete!");
       router.push("/dashboard");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "An error occurred");
+      toast.error("An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[100dvh] relative flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800" />
-      <motion.div
-        className="w-full max-w-lg relative z-10"
-        initial="hidden"
-        animate="visible"
-        variants={stagger}
-      >
-        <Card className="w-full space-y-6 p-8 bg-gray-800/50 border-gray-800 backdrop-blur-sm shadow-xl">
-          <motion.div
-            variants={fadeInUp}
-            className="flex flex-col space-y-2 text-center"
-          >
-            <Badge
-              variant="outline"
-              className="w-fit mx-auto border-purple-500/20 bg-purple-500/10 text-purple-300 backdrop-blur-sm"
-            >
-              ✨ Complete Your Profile
-            </Badge>
-            <h1 className="text-2xl font-semibold tracking-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              {step === 1
-                ? "Tell us about yourself"
-                : step === 2
-                ? "What skills can you offer?"
-                : "What skills do you want to learn?"}
-            </h1>
-            <p className="text-sm text-gray-400">
-              {step === 1
-                ? "Add a bio to help others get to know you"
-                : step === 2
-                ? "Select the skills you're comfortable teaching"
-                : "Select the skills you'd like to learn from others"}
-            </p>
-          </motion.div>
+    <div className="container mx-auto py-8 space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-4xl font-bold">Profile Setup</h1>
+      </div>
 
-          <motion.div variants={fadeInUp} className="space-y-4">
-            {step === 1 && (
-              <div className="space-y-2">
-                <Textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell us about yourself, your experience, and what you're passionate about..."
-                  className="min-h-[150px] bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500"
-                />
-              </div>
-            )}
+      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Bio</label>
+            <Textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tell us about yourself and your interests..."
+              className="min-h-[100px]"
+            />
+          </div>
 
-            {(step === 2 || step === 3) && (
-              <div className="space-y-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Skill Category</label>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedCategory && (
+              <>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-200">
-                    Skill Category
-                  </label>
+                  <label className="text-sm font-medium">Skills You Have</label>
                   <Select
-                    value={selectedCategory}
-                    onValueChange={setSelectedCategory}
+                    onValueChange={(value) =>
+                      setSelectedSkills([...selectedSkills, value])
+                    }
                   >
-                    <SelectTrigger className="bg-gray-900/50 border-gray-700 text-gray-200">
-                      <SelectValue placeholder="Select a category" />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your skills" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
+                      {mockSkills[selectedCategory]?.map((skill) => (
+                        <SelectItem key={skill.id} value={skill.name}>
+                          {skill.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {selectedCategory && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Skills You Want to Learn
+                  </label>
+                  <Select
+                    onValueChange={(value) =>
+                      setSelectedSkillsToLearn([
+                        ...selectedSkillsToLearn,
+                        value,
+                      ])
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select skills to learn" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mockSkills[selectedCategory]?.map((skill) => (
+                        <SelectItem key={skill.id} value={skill.name}>
+                          {skill.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {(selectedSkills.length > 0 ||
+                  selectedSkillsToLearn.length > 0) && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-200">
-                      {step === 2
-                        ? "Skills You Can Offer"
-                        : "Skills You Want to Learn"}
+                    <label className="text-sm font-medium">
+                      Selected Skills
                     </label>
-                    <Select
-                      value={
-                        step === 2
-                          ? selectedSkillsOffered[0]
-                          : selectedSkillsWanted[0]
-                      }
-                      onValueChange={(value) => {
-                        if (step === 2) {
-                          setSelectedSkillsOffered([value]);
-                        } else {
-                          setSelectedSkillsWanted([value]);
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="bg-gray-900/50 border-gray-700 text-gray-200">
-                        <SelectValue placeholder="Select a skill" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {skills.map((skill) => (
-                          <SelectItem key={skill.id} value={skill.id}>
-                            {skill.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                      {selectedSkills.length > 0 && (
+                        <div>
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Your Skills:
+                          </span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {selectedSkills.map((skill) => (
+                              <span
+                                key={skill}
+                                className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedSkillsToLearn.length > 0 && (
+                        <div>
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Want to Learn:
+                          </span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {selectedSkillsToLearn.map((skill) => (
+                              <span
+                                key={skill}
+                                className="inline-flex items-center rounded-md bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary-foreground"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
-              </div>
+              </>
             )}
-          </motion.div>
+          </div>
 
-          <motion.div
-            variants={fadeInUp}
-            className="flex justify-between space-x-2"
-          >
-            {step > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleBack}
-                disabled={loading}
-                className="border-gray-700 text-gray-300 hover:bg-gray-800"
-              >
-                Back
-              </Button>
-            )}
-            {step < 3 ? (
-              <Button
-                type="button"
-                onClick={handleNext}
-                className={`ml-auto bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 ${
-                  loading ? "opacity-50" : ""
-                }`}
-                disabled={loading}
-              >
-                Next
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={handleSubmit}
-                className={`ml-auto bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 ${
-                  loading ? "opacity-50" : ""
-                }`}
-                disabled={loading}
-              >
-                {loading ? "Saving..." : "Complete Setup"}
-              </Button>
-            )}
-          </motion.div>
-        </Card>
-      </motion.div>
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard")}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save Profile"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
