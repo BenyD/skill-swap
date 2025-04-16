@@ -11,9 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/icons";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { signUp } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
+import { signUp } from "@/lib/auth";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -30,68 +29,58 @@ const stagger = {
 
 export default function SignUp() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    name: "",
-    username: "",
-    bio: "",
   });
-  const [error, setError] = useState<string | null>(null);
 
-  const totalSteps = 3;
-  const progress = (step / totalSteps) * 100;
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleNext = () => {
-    if (step < totalSteps) {
-      setStep((prev) => prev + 1);
-    }
-  };
-
-  const handleBack = () => {
-    if (step > 1) {
-      setStep((prev) => prev - 1);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
-      const { user, error } = await signUp(formData);
+      console.log("Starting signup process...");
+      const { user, error, needsConfirmation } = await signUp(
+        formData.email,
+        formData.password
+      );
 
       if (error) {
-        if (error.message.includes("security purposes")) {
-          setError("Please wait a moment before trying again");
-        } else {
-          setError(error.message);
+        console.error("Signup error in page:", error);
+        if (error.message.includes("User already registered")) {
+          toast.error(
+            "An account with this email already exists. Please sign in."
+          );
+          router.push("/sign-in");
+          return;
         }
-        toast.error(error.message);
+        throw error;
+      }
+
+      console.log("Signup successful, needsConfirmation:", needsConfirmation);
+
+      if (user && needsConfirmation) {
+        toast.success("Please check your email to confirm your account!");
+        router.push("/email-confirmation");
         return;
       }
 
       if (user) {
-        toast.success("Please check your email to confirm your account!");
-        router.push("/sign-in");
+        router.push("/profile-setup");
       }
     } catch (error) {
-      const errorMessage =
+      console.error("Caught error in signup page:", error);
+      toast.error(
         error instanceof Error
           ? error.message
-          : "Something went wrong. Please try again.";
-      setError(errorMessage);
-      toast.error(errorMessage);
+          : "An error occurred during signup"
+      );
     } finally {
       setLoading(false);
     }
@@ -125,157 +114,55 @@ export default function SignUp() {
             </p>
           </motion.div>
 
-          <motion.div variants={fadeInUp}>
-            <Progress value={progress} className="h-1 bg-gray-700" />
-          </motion.div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {step === 1 && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-200">
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className="bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-gray-200">
-                      Password
-                    </Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required
-                      className="bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-gray-200">
-                      Full Name
-                    </Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      type="text"
-                      placeholder="John Doe"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className="bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="username" className="text-gray-200">
-                      Username
-                    </Label>
-                    <Input
-                      id="username"
-                      name="username"
-                      type="text"
-                      placeholder="johndoe"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      required
-                      className="bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {step === 3 && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bio" className="text-gray-200">
-                      Bio
-                    </Label>
-                    <Input
-                      id="bio"
-                      name="bio"
-                      placeholder="Tell us about yourself..."
-                      value={formData.bio}
-                      onChange={handleInputChange}
-                      className="bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500"
-                    />
-                  </div>
-                </div>
-              )}
+            <motion.div variants={fadeInUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-200">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  className="bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-200">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  className="bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500"
+                />
+              </div>
             </motion.div>
 
-            <motion.div
-              variants={fadeInUp}
-              className="flex justify-between space-x-2"
-            >
-              {step > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleBack}
-                  disabled={loading}
-                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                >
-                  Back
-                </Button>
-              )}
-              {step < totalSteps ? (
-                <Button
-                  type="button"
-                  onClick={handleNext}
-                  className={`ml-auto bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 ${
-                    loading ? "opacity-50" : ""
-                  }`}
-                  disabled={loading}
-                >
-                  Next
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  className={`ml-auto bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 ${
-                    loading ? "opacity-50" : ""
-                  }`}
-                  disabled={loading}
-                >
-                  {loading && (
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Create Account
-                </Button>
-              )}
+            <motion.div variants={fadeInUp}>
+              <Button
+                type="submit"
+                className={`w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 ${
+                  loading ? "opacity-50" : ""
+                }`}
+                disabled={loading}
+              >
+                {loading && (
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Create Account
+              </Button>
             </motion.div>
           </form>
-
-          {error && (
-            <motion.div
-              variants={fadeInUp}
-              className="text-sm text-red-400 text-center"
-            >
-              {error}
-            </motion.div>
-          )}
 
           <motion.p
             variants={fadeInUp}

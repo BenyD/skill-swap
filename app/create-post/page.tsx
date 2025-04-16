@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -13,31 +13,79 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type Skill = {
+  id: string;
+  name: string;
+  category_id: string;
+};
+
+type SkillCategory = {
+  id: string;
+  name: string;
+};
 
 export default function CreatePost() {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [skillsOffered, setSkillsOffered] = useState<string[]>([]);
-  const [skillsWanted, setSkillsWanted] = useState<string[]>([]);
-  const [currentSkillOffered, setCurrentSkillOffered] = useState("");
-  const [currentSkillWanted, setCurrentSkillWanted] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [categories, setCategories] = useState<SkillCategory[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [selectedSkillsOffered, setSelectedSkillsOffered] = useState<string[]>(
+    []
+  );
+  const [selectedSkillsWanted, setSelectedSkillsWanted] = useState<string[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
-  const handleAddSkillOffered = () => {
-    if (currentSkillOffered && !skillsOffered.includes(currentSkillOffered)) {
-      setSkillsOffered([...skillsOffered, currentSkillOffered]);
-      setCurrentSkillOffered("");
-    }
-  };
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from("skill_categories")
+        .select("*")
+        .order("name");
 
-  const handleAddSkillWanted = () => {
-    if (currentSkillWanted && !skillsWanted.includes(currentSkillWanted)) {
-      setSkillsWanted([...skillsWanted, currentSkillWanted]);
-      setCurrentSkillWanted("");
-    }
-  };
+      if (error) {
+        console.error("Error fetching categories:", error);
+        return;
+      }
+
+      setCategories(data || []);
+    };
+
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      if (!selectedCategory) return;
+
+      const { data, error } = await supabase
+        .from("skills")
+        .select("*")
+        .eq("category_id", selectedCategory)
+        .order("name");
+
+      if (error) {
+        console.error("Error fetching skills:", error);
+        return;
+      }
+
+      setSkills(data || []);
+    };
+
+    fetchSkills();
+  }, [selectedCategory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,17 +98,43 @@ export default function CreatePost() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase.from("skill_swap_posts").insert([
-        {
-          user_id: user.id,
-          title,
-          description,
-          skills_offered: skillsOffered,
-          skills_wanted: skillsWanted,
-        },
-      ]);
+      // Create the exchange request
+      const { data: exchangeRequest, error: requestError } = await supabase
+        .from("exchange_requests")
+        .insert([
+          {
+            requester_id: user.id,
+            offered_skill_id: selectedSkillsOffered[0], // For now, just use the first skill
+            requested_skill_id: selectedSkillsWanted[0], // For now, just use the first skill
+            status: "pending",
+            message: description,
+          },
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (requestError) throw requestError;
+
+      // Create user skills entries for offered skills
+      const offeredSkillsPromises = selectedSkillsOffered.map((skillId) =>
+        supabase.from("user_skills").insert({
+          user_id: user.id,
+          skill_id: skillId,
+          proficiency_level: "intermediate", // Default value, can be made configurable
+        })
+      );
+
+      // Create user learning goals entries for wanted skills
+      const wantedSkillsPromises = selectedSkillsWanted.map((skillId) =>
+        supabase.from("user_learning_goals").insert({
+          user_id: user.id,
+          skill_id: skillId,
+          current_level: "none", // Default value
+          target_level: "intermediate", // Default value, can be made configurable
+        })
+      );
+
+      await Promise.all([...offeredSkillsPromises, ...wantedSkillsPromises]);
 
       router.push("/dashboard");
     } catch (error) {
@@ -101,56 +175,75 @@ export default function CreatePost() {
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Skills You Can Offer
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  value={currentSkillOffered}
-                  onChange={(e) => setCurrentSkillOffered(e.target.value)}
-                  placeholder="Add a skill"
-                />
-                <Button type="button" onClick={handleAddSkillOffered}>
-                  Add
-                </Button>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Skill Category</label>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {skillsOffered.map((skill) => (
-                  <span
-                    key={skill}
-                    className="rounded-full bg-primary/10 px-3 py-1 text-sm"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Skills You Want to Learn
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  value={currentSkillWanted}
-                  onChange={(e) => setCurrentSkillWanted(e.target.value)}
-                  placeholder="Add a skill"
-                />
-                <Button type="button" onClick={handleAddSkillWanted}>
-                  Add
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {skillsWanted.map((skill) => (
-                  <span
-                    key={skill}
-                    className="rounded-full bg-primary/10 px-3 py-1 text-sm"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+              {selectedCategory && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Skills You Can Offer
+                    </label>
+                    <Select
+                      value={selectedSkillsOffered[0]}
+                      onValueChange={(value) =>
+                        setSelectedSkillsOffered([value])
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a skill" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {skills.map((skill) => (
+                          <SelectItem key={skill.id} value={skill.id}>
+                            {skill.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Skills You Want to Learn
+                    </label>
+                    <Select
+                      value={selectedSkillsWanted[0]}
+                      onValueChange={(value) =>
+                        setSelectedSkillsWanted([value])
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a skill" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {skills.map((skill) => (
+                          <SelectItem key={skill.id} value={skill.id}>
+                            {skill.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}
