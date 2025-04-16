@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Profile = {
   id: string;
@@ -34,38 +35,51 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<SkillSwapPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const {
           data: { user },
+          error: authError,
         } = await supabase.auth.getUser();
-        if (!user) return;
+
+        if (authError || !user) {
+          router.push("/sign-in");
+          return;
+        }
 
         const { data: profileData } = await supabase
-          .from("profiles")
+          .from("users")
           .select("*")
           .eq("id", user.id)
           .single();
 
+        if (!profileData) {
+          // If no profile exists, redirect to profile setup
+          router.push("/profile-setup");
+          return;
+        }
+
         setProfile(profileData);
 
         const { data: postsData } = await supabase
-          .from("skill_swap_posts")
+          .from("exchange_requests")
           .select("*")
           .order("created_at", { ascending: false });
 
         setPosts(postsData || []);
       } catch (error) {
         console.error("Error fetching data:", error);
+        router.push("/sign-in");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (

@@ -38,12 +38,31 @@ export default function EmailConfirmation() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (user?.email_confirmed_at) {
+
+      if (!user) {
+        toast.error("No user found. Please try signing in again.");
+        return;
+      }
+
+      // Check if the user's email is confirmed
+      if (user.email_confirmed_at) {
         setIsConfirmed(true);
         toast.success("Email confirmed successfully!");
-        setTimeout(() => {
+
+        // Check if user has completed profile setup
+        const { data: profile } = await supabase
+          .from("users")
+          .select("id")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile) {
+          // User hasn't completed profile setup, redirect to profile setup
           router.push("/profile-setup");
-        }, 2000);
+        } else {
+          // User has completed profile setup, redirect to dashboard
+          router.push("/dashboard");
+        }
       } else {
         toast.error("Email not confirmed yet. Please check your inbox.");
       }
@@ -61,24 +80,18 @@ export default function EmailConfirmation() {
       const params = new URLSearchParams(hash);
       const accessToken = params.get("access_token");
       const refreshToken = params.get("refresh_token");
+      const type = params.get("type");
 
-      if (accessToken && refreshToken) {
+      if (accessToken && refreshToken && type === "signup") {
         setLoading(true);
         try {
-          // First, try to get the current session
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
+          // Set the session with the new tokens
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
 
-          // If we don't have a session or the tokens are different, set the new session
-          if (!session || session.access_token !== accessToken) {
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-
-            if (error) throw error;
-          }
+          if (error) throw error;
 
           // Get the user's email
           const {
@@ -87,6 +100,7 @@ export default function EmailConfirmation() {
           if (user?.email) {
             setUserEmail(user.email);
             setIsConfirmed(true);
+            toast.success("Email confirmed successfully!");
           }
 
           // Clear the hash from the URL
@@ -96,9 +110,9 @@ export default function EmailConfirmation() {
             window.location.pathname
           );
 
-          // Redirect to profile setup after a short delay to show the success state
+          // Redirect to email-confirmed page after a short delay to show the success state
           setTimeout(() => {
-            router.push("/profile-setup");
+            router.push("/email-confirmed");
           }, 2000);
         } catch (error) {
           console.error("Error setting session:", error);

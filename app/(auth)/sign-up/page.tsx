@@ -45,14 +45,12 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      console.log("Starting signup process...");
       const { user, error, needsConfirmation } = await signUp(
         formData.email,
         formData.password
       );
 
       if (error) {
-        console.error("Signup error in page:", error);
         if (error.message.includes("User already registered")) {
           toast.error(
             "An account with this email already exists. Please sign in."
@@ -63,9 +61,7 @@ export default function SignUp() {
         throw error;
       }
 
-      console.log("Signup successful, needsConfirmation:", needsConfirmation);
-
-      if (user && needsConfirmation) {
+      if (needsConfirmation) {
         toast.success("Please check your email to confirm your account!");
         router.push("/email-confirmation");
         return;
@@ -75,7 +71,7 @@ export default function SignUp() {
         router.push("/profile-setup");
       }
     } catch (error) {
-      console.error("Caught error in signup page:", error);
+      console.error("Signup error:", error);
       toast.error(
         error instanceof Error
           ? error.message
@@ -143,6 +139,7 @@ export default function SignUp() {
                   value={formData.password}
                   onChange={handleInputChange}
                   required
+                  minLength={6}
                   className="bg-gray-900/50 border-gray-700 text-gray-200 placeholder:text-gray-500"
                 />
               </div>

@@ -116,7 +116,8 @@ export default function ProfileSetup() {
         .single();
 
       if (profile) {
-        router.push("/");
+        // If profile exists, redirect to dashboard
+        router.push("/dashboard");
         return;
       }
     };
@@ -146,21 +147,21 @@ export default function ProfileSetup() {
       } = await supabase.auth.getUser();
       if (userError || !user) throw new Error("Not authenticated");
 
-      // Update user profile
-      const { error: profileError } = await supabase
-        .from("users")
-        .update({
-          full_name: formData.name,
-          username: formData.username,
-          bio: formData.bio,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id);
+      // Create user profile
+      const { error: profileError } = await supabase.from("users").insert({
+        id: user.id,
+        email: user.email,
+        bio: bio,
+        skills_offered: selectedSkillsOffered,
+        skills_wanted: selectedSkillsWanted,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
 
       if (profileError) throw profileError;
 
       toast.success("Profile setup complete!");
-      router.push("/");
+      router.push("/dashboard");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An error occurred");
     } finally {

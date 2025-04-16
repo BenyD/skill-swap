@@ -6,13 +6,13 @@ export type AuthError = {
 
 export async function signUp(email: string, password: string) {
   try {
-    console.log("Attempting signup with email:", email);
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${
+          process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+        }/email-confirmed`,
         data: {
           email_confirmed_at: null,
         },
@@ -20,11 +20,8 @@ export async function signUp(email: string, password: string) {
     });
 
     if (error) {
-      console.error("Signup error:", error);
       throw error;
     }
-
-    console.log("Signup response:", data);
 
     // If signup is successful but email needs confirmation
     if (data.user && !data.session) {
@@ -33,7 +30,7 @@ export async function signUp(email: string, password: string) {
 
     return { user: data.user, error: null, needsConfirmation: false };
   } catch (error) {
-    console.error("Signup caught error:", error);
+    console.error("Signup error:", error);
     return { user: null, error, needsConfirmation: false };
   }
 }

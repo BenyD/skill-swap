@@ -1,3 +1,22 @@
+-- Drop existing objects
+drop trigger if exists on_auth_user_created on auth.users;
+drop function if exists public.handle_new_user();
+
+drop table if exists public.notifications;
+drop table if exists public.messages;
+drop table if exists public.reviews;
+drop table if exists public.exchange_sessions;
+drop table if exists public.exchange_requests;
+drop table if exists public.user_learning_goals;
+drop table if exists public.user_skills;
+drop table if exists public.skills;
+drop table if exists public.skill_categories;
+drop table if exists public.users;
+
+drop type if exists notification_type;
+drop type if exists exchange_session_status;
+drop type if exists exchange_request_status;
+
 -- Enable necessary extensions
 create extension if not exists "uuid-ossp";
 
@@ -137,8 +156,20 @@ alter table public.notifications enable row level security;
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.users (id, full_name, username)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'username');
+  insert into public.users (
+    id,
+    full_name,
+    username,
+    created_at,
+    updated_at
+  )
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
+    now(),
+    now()
+  );
   return new;
 end;
 $$ language plpgsql security definer;

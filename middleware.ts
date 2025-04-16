@@ -10,12 +10,18 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // If user is not signed in and trying to access protected routes (except homepage and auth pages)
+  // If user is not signed in and trying to access protected routes (except public pages)
   if (
     !session &&
-    !["/", "/sign-in", "/sign-up", "/email-confirmation"].includes(
-      req.nextUrl.pathname
-    )
+    ![
+      "/",
+      "/sign-in",
+      "/sign-up",
+      "/email-confirmation",
+      "/email-confirmed",
+      "/auth/callback",
+      "/profile-setup",
+    ].includes(req.nextUrl.pathname)
   ) {
     return NextResponse.redirect(new URL("/", req.url));
   }
@@ -23,6 +29,11 @@ export async function middleware(req: NextRequest) {
   // If user is signed in and trying to access auth pages
   if (session && ["/sign-in", "/sign-up"].includes(req.nextUrl.pathname)) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  // If user is not signed in and trying to access profile setup
+  if (!session && req.nextUrl.pathname === "/profile-setup") {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
   return res;

@@ -5,6 +5,17 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const next = requestUrl.searchParams.get("next");
+  const type = requestUrl.hash
+    ? new URLSearchParams(requestUrl.hash.substring(1)).get("type")
+    : null;
+
+  // Handle email confirmation
+  if (type === "signup" || type === "recovery") {
+    return NextResponse.redirect(
+      new URL("/email-confirmed", requestUrl.origin)
+    );
+  }
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
@@ -19,7 +30,7 @@ export async function GET(request: Request) {
     }
 
     if (session?.user) {
-      // Check if user has completed profile setup
+      // Check if this is a new user (email confirmation)
       const { data: profile } = await supabase
         .from("users")
         .select("id")
@@ -27,13 +38,13 @@ export async function GET(request: Request) {
         .single();
 
       if (!profile) {
-        // User hasn't completed profile setup, redirect to profile setup
+        // This is a new user who just confirmed their email
         return NextResponse.redirect(
-          new URL("/profile-setup", requestUrl.origin)
+          new URL("/email-confirmed", requestUrl.origin)
         );
       }
 
-      // User has completed profile setup, redirect to home
+      // Existing user, redirect to home
       return NextResponse.redirect(new URL("/", requestUrl.origin));
     }
   }

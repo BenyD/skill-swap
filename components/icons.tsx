@@ -1,9 +1,15 @@
-import { Loader2, LucideProps, type Icon as LucideIcon } from "lucide-react";
+import {
+  Loader2,
+  LucideProps,
+  Mail,
+  type Icon as LucideIcon,
+} from "lucide-react";
 
 export type Icon = LucideIcon;
 
 export const Icons = {
   spinner: Loader2,
+  mail: Mail,
   gitHub: (props: LucideProps) => (
     <svg viewBox="0 0 438.549 438.549" {...props}>
       <path

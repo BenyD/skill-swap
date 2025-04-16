@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,8 +54,22 @@ export default function SignIn() {
       }
 
       if (user) {
-        toast.success("Signed in successfully!");
-        router.push("/dashboard");
+        // Check if user has completed profile setup
+        const { data: profile } = await supabase
+          .from("users")
+          .select("id")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile) {
+          // First time signing in, redirect to profile setup
+          toast.success("Welcome! Let's set up your profile.");
+          router.push("/profile-setup");
+        } else {
+          // Existing user, redirect to dashboard
+          toast.success("Signed in successfully!");
+          router.push("/dashboard");
+        }
       }
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
