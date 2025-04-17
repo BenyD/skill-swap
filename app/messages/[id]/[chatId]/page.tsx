@@ -12,12 +12,12 @@ import { format } from "date-fns";
 export default function ChatPage({
   params,
 }: {
-  params: Promise<{ chatId: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { chatId } = use(params);
+  const { id } = use(params);
   const router = useRouter();
   const { chats, currentUser, addMessage } = useMockData();
-  const chat = chats.find((c) => c.id === chatId);
+  const chat = chats.find((c) => c.id === id);
 
   if (!chat) {
     return <div>Chat not found</div>;
